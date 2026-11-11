@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="데이터 모델링의 이해 20문제 퀴즈">
+<title>데이터 모델링 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: each question is drawn as an ERD entity box — header = entity name (topic), options = attribute rows; progress is a row of instance cells. */
+:root{
+  --bg:#FFFFFF; --panel:#F4F6FA; --ink:#121826; --muted:#5B6576; --line:#DCE2EC;
+  --accent:#0051FF; --accent-soft:#EAF0FF; --on-accent:#FFFFFF;
+  --ok:#12804E; --ok-soft:#E5F5EC; --bad:#D0342C; --bad-soft:#FDEBEA;
+  --body:'IBM Plex Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1117; --panel:#161B24; --ink:#EDF0F5; --muted:#A1AABA; --line:#2A3241;
+  --accent:#5C8DFF; --accent-soft:#16244A; --on-accent:#0E1117;
+  --ok:#5ED197; --ok-soft:#11301F; --bad:#FF8B82; --bad-soft:#3A1B19; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0E1117; --panel:#161B24; --ink:#EDF0F5; --muted:#A1AABA; --line:#2A3241;
+  --accent:#5C8DFF; --accent-soft:#16244A; --on-accent:#0E1117;
+  --ok:#5ED197; --ok-soft:#11301F; --bad:#FF8B82; --bad-soft:#3A1B19; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header{display:grid;gap:6px;margin-bottom:28px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+h1{font-size:clamp(26px,4.4vw,34px);line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1 code{font-family:var(--mono);font-size:.62em;color:var(--accent);font-weight:600;vertical-align:.25em;margin-left:6px}
+.lede{margin:4px 0 0;color:var(--muted);font-size:15px}
+
+/* instance cells = progress */
+.cells{display:grid;grid-template-columns:repeat(20,minmax(0,1fr));gap:4px;margin:0 0 20px}
+.cell{height:28px;border:1px solid var(--line);border-radius:3px;background:var(--bg);font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0}
+.cell.cur{border-color:var(--accent);color:var(--accent);font-weight:600;box-shadow:inset 0 -3px 0 var(--accent)}
+.cell.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.cell.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+@media (max-width:560px){.cells{grid-template-columns:repeat(10,minmax(0,1fr))}}
+.meta{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-bottom:10px;font-family:var(--mono)}
+
+/* entity card */
+.entity{border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;background:var(--bg)}
+.ent-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px;background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:13px}
+.ent-head b{font-weight:600}
+.ent-q{padding:18px 16px 16px;border-bottom:1.5px solid var(--ink)}
+.ent-q h2{font-size:19px;line-height:1.5;margin:0;font-weight:600;text-wrap:pretty}
+.ent-q .ctx{margin-top:12px;overflow-x:auto}
+.ctx table{border-collapse:collapse;font-size:13.5px;font-family:var(--mono);min-width:100%}
+.ctx th,.ctx td{border:1px solid var(--line);padding:6px 10px;text-align:left;white-space:nowrap}
+.ctx th{background:var(--panel);font-weight:600}
+.opts{list-style:none;margin:0;padding:0}
+.opt{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:var(--bg);padding:13px 16px;font-size:15.5px}
+.opts li:last-child .opt{border-bottom:0}
+.opt:hover:not([disabled]){background:var(--panel)}
+.opt .key{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--muted);width:26px;height:26px;border:1px solid var(--line);border-radius:3px;display:inline-flex;align-items:center;justify-content:center}
+.opt[aria-checked="true"]{background:var(--accent-soft)}
+.opt[aria-checked="true"] .key{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.opt .mark{font-family:var(--mono);font-size:12px;font-weight:600}
+.opt.is-ok{background:var(--ok-soft)} .opt.is-ok .key{background:var(--ok);border-color:var(--ok);color:var(--on-accent)} .opt.is-ok .mark{color:var(--ok)}
+.opt.is-bad{background:var(--bad-soft)} .opt.is-bad .key{background:var(--bad);border-color:var(--bad);color:var(--on-accent)} .opt.is-bad .mark{color:var(--bad)}
+.opt[disabled]{cursor:default}
+
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:16px}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:6px;padding:10px 18px;font-weight:600;font-size:15px}
+.btn.ghost{background:var(--bg);color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.err{color:var(--bad);font-size:13.5px}
+
+.explain{margin-top:16px;padding:14px 16px;border-radius:6px;background:var(--panel);font-size:15px}
+.explain .verdict{font-weight:700;margin-bottom:4px}
+.explain .verdict.ok{color:var(--ok)} .explain .verdict.bad{color:var(--bad)}
+.explain p{margin:0}
+
+/* result */
+.result h2{font-size:22px;margin:0 0 4px}
+.score{font-family:var(--mono);font-size:56px;font-weight:600;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.score small{font-size:22px;color:var(--muted)}
+.topics{margin:20px 0 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.topics div{display:grid;grid-template-columns:minmax(0,1fr) 120px 48px;gap:12px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.topics div:last-child{border-bottom:0}
+.bar{height:8px;border-radius:4px;background:var(--panel);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent)}
+.topics .n{font-family:var(--mono);font-size:13px;text-align:right;color:var(--muted)}
+.wrong{margin-top:24px;display:grid;gap:12px}
+.wrong h3{font-size:16px;margin:0}
+.w-item{border:1px solid var(--line);border-left:4px solid var(--bad);border-radius:0 6px 6px 0;padding:12px 14px;font-size:14.5px}
+.w-item .q{font-weight:600;margin-bottom:6px}
+.w-item .a{color:var(--muted);font-size:13.5px}
+.w-item .a b{color:var(--ok)}
+.src{margin-top:36px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+@media (prefers-reduced-motion: no-preference){.entity{animation:in .25s ease-out}@keyframes in{from{transform:translateY(6px);opacity:.6}to{transform:none;opacity:1}}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">SQLD 대비 · 데이터 모델링의 이해</div>
+    <h1>데이터 모델링 퀴즈 <code>20 rows</code></h1>
+    <p class="lede">개념 모델링부터 ERD, 엔티티, 관계, 식별자까지 20문제. 답을 고르고 확인하면 바로 해설이 나옵니다. 마지막 두 문제는 우리 조 프로젝트(이탈방지턱)에 적용한 문제입니다.</p>
+  </header>
+
+  <div class="cells" id="cells" aria-label="문제 이동"></div>
+  <section id="quiz" aria-live="polite"></section>
+  <section id="result" class="result" hidden aria-live="polite"></section>
+
+  <p class="src">참고: 정미나(2024). 유선배 SQL개발자(SQLD) 과외노트. 시대에듀. 수업 자료 「데이터 모델링의 이해」를 바탕으로 만든 문제입니다.</p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var Q=[
+ {t:'개념',q:'데이터 모델링에 대한 설명으로 가장 알맞은 것은?',o:['저장 장치의 읽기·쓰기 속도를 최적화하는 작업','현실 세계를 단순화·추상화·명확화하여 데이터베이스로 표현하는 기법','화면 디자인을 데이터 구조에 맞게 그리는 작업','프로그램 코드를 테이블 단위로 나누는 작업'],a:1,e:'데이터 모델링은 복잡한 현실 세계를 단순화, 추상화, 명확화해서 데이터베이스로 표현하는 기법입니다. 모델링이라는 말 자체가 설계·디자인·형상을 뜻합니다.'},
+ {t:'개념',q:'데이터 모델링의 진행 순서로 옳은 것은?',o:['논리적 → 개념적 → 물리적','물리적 → 논리적 → 개념적','개념적 → 논리적 → 물리적','개념적 → 물리적 → 논리적'],a:2,e:'모델링은 개념적 모델링 → 논리적 모델링 → 물리적 모델링 순서로 단계적으로 진행합니다. 추상적인 업무 개념에서 시작해 실제 DB 구조로 내려갑니다.'},
+ {t:'개념',q:'데이터 모델링의 세 가지 관점에 해당하지 않는 것은?',o:['데이터 관점(What)','프로세스 관점(How)','상호작용 관점(Interaction)','보안 관점(Security)'],a:3,e:'세 가지 관점은 데이터(What), 프로세스(How), 데이터와 프로세스의 상호작용(Interaction)입니다. 보안은 여기에 포함되지 않습니다.'},
+ {t:'개념',q:'"나(고객)가 음식(상품)을 주문한다"를 개념적으로 모델링할 때 "주문한다"는 무엇에 해당하나?',o:['엔티티','속성','관계(행위 관계)','식별자'],a:2,e:'고객과 상품은 엔티티이고, "주문한다"는 두 엔티티를 잇는 행위 관계입니다. 관계는 존재 관계와 행위 관계로 나뉩니다.'},
+ {t:'ERD',q:'ERD 작성 절차에서 "관계를 설정한다" 바로 다음 단계는?',o:['엔티티를 배치한다','관계명을 부여한다','참여도를 표시한다','관계의 필수 여부를 설정한다'],a:1,e:'순서는 엔티티 도출 → 배치 → 관계 설정 → 관계명 부여 → 참여도 표시 → 필수/선택 여부 설정입니다.'},
+ {t:'ERD',q:'Chen 표기법 ERD에서 다이아몬드(마름모)로 그리는 것은?',o:['관계','엔티티','속성','기본키'],a:0,e:'엔티티는 사각형, 관계는 다이아몬드, 속성은 타원으로 그리고, 기본키는 밑줄로 표시합니다.'},
+ {t:'엔티티',q:'엔티티의 특성으로 옳지 않은 것은?',o:['업무에서 실제로 쓰이는 정보여야 한다','유일하게 식별될 수 있어야 한다','인스턴스가 1개만 있어도 엔티티가 될 수 있다','다른 엔티티와 1개 이상의 관계를 가져야 한다'],a:2,e:'엔티티는 2개 이상의 인스턴스를 가져야 합니다. 인스턴스가 하나뿐이라면 따로 테이블로 관리할 이유가 없습니다. 속성도 1개 이상 있어야 합니다.'},
+ {t:'엔티티',q:'엔티티 이름을 짓는 규칙으로 옳은 것은?',o:['여러 개를 뜻하도록 복수형 명사를 쓴다','한글은 약어로 줄여 짧게 쓴다','단수 명사로 쓰고 띄어쓰기를 하지 않는다','다른 엔티티와 의미가 겹쳐도 괜찮다'],a:2,e:'엔티티 이름은 업무에서 실제로 쓰는 용어로, 단수 명사로, 띄어쓰기 없이 짓습니다. 한글은 약어를 쓰지 않고, 다른 엔티티와 의미가 중복되면 안 됩니다.'},
+ {t:'엔티티',q:'엔티티·인스턴스·속성·속성값의 관계로 옳은 것은?',o:['한 속성은 여러 개의 속성값을 가질 수 있다','한 인스턴스는 하나의 속성만 가진다','한 엔티티는 하나의 인스턴스만 가진다','한 속성은 하나의 속성값을 가진다'],a:3,e:'한 엔티티는 여러 인스턴스를, 한 인스턴스는 여러 속성을 가지고, 한 속성은 하나의 속성값만 가집니다.'},
+ {t:'엔티티',q:'아래 회원 엔티티에서 외래키(FK)는?',ctx:'<table><tr><th>회원</th></tr><tr><td>회원번호</td></tr><tr><td>회원명</td></tr><tr><td>아이디</td></tr><tr><td>핸드폰번호</td></tr><tr><td>회원등급코드</td></tr></table>',o:['회원번호','회원등급코드','아이디','핸드폰번호'],a:1,e:'회원번호는 회원을 구별하는 기본키(PK)이고, 회원등급코드는 다른 엔티티(회원등급)를 참조하는 외래키(FK)입니다. 나머지는 일반 속성입니다.'},
+ {t:'관계',q:'관계의 구성 요소가 아닌 것은?',o:['관계명','관계차수(1:1, 1:N, N:M)','관계선택사항(필수/선택)','관계인덱스'],a:3,e:'관계는 관계명, 관계차수, 관계선택사항으로 구성됩니다. 인덱스는 물리적 설계에서 다루는 것으로 관계의 구성 요소가 아닙니다.'},
+ {t:'관계',q:'회원·투표·배우 모델에서 투표 엔티티가 가진 외래키(FK) 두 개는?',ctx:'<table><tr><th>회원</th><th>투표</th><th>배우</th></tr><tr><td>#아이디</td><td>#투표순번</td><td>#배우번호</td></tr><tr><td>*이름</td><td>*배우번호</td><td>*이름</td></tr><tr><td>*핸드폰번호</td><td>*아이디</td><td>*대표작품</td></tr><tr><td>*이메일주소</td><td>*투표일시</td><td></td></tr></table>',o:['투표순번, 투표일시','아이디, 이메일주소','배우번호, 아이디','배우번호, 대표작품'],a:2,e:'투표는 누가(아이디 → 회원) 어떤 배우에게(배우번호 → 배우) 투표했는지를 기록하므로 두 값이 외래키입니다. 회원(1):투표(N), 배우(1):투표(N) 관계입니다.'},
+ {t:'관계',q:'두 엔티티가 다대다(N:M) 관계일 때 데이터베이스에서 구현하는 방법은?',o:['두 엔티티를 하나로 합친다','교차(연결) 엔티티를 만들어 1:N 두 개로 분해한다','한쪽 엔티티에 상대 엔티티의 키를 여러 칸 만든다','관계를 지우고 따로 관리한다'],a:1,e:'N:M은 교차 엔티티로 해소합니다. 예를 들어 주문과 상품 사이에 주문상품을, 학생과 과목 사이에 수강신청을 두면 1:N 관계 두 개가 됩니다. 교차 엔티티에는 수량·성적 같은 추가 정보도 담을 수 있습니다.'},
+ {t:'관계',q:'병원 예약 시스템에서 의사와 진료과의 관계로 옳은 것은?',o:['진료과(1) : 의사(N)','의사(1) : 진료과(N)','의사(1) : 진료과(1)','의사(N) : 진료과(M)'],a:0,e:'한 진료과에는 여러 의사가 소속되고, 의사는 한 진료과에 소속됩니다. 그래서 의사 엔티티가 진료과번호를 외래키로 가집니다.'},
+ {t:'식별자',q:'주식별자의 특성으로 옳지 않은 것은?',o:['유일성','최소성','불변성','중복성'],a:3,e:'주식별자는 유일성, 최소성, 불변성, 존재성을 가져야 합니다. 식별자가 중복되면 인스턴스를 구별할 수 없습니다.'},
+ {t:'식별자',q:'"주식별자는 반드시 값이 있어야 하며 NULL일 수 없다"는 어떤 특성인가?',o:['유일성','존재성','최소성','불변성'],a:1,e:'존재성은 주식별자에 반드시 값이 있어야 한다는 특성입니다. 최소성은 꼭 필요한 최소한의 속성으로만 구성하는 것, 불변성은 한번 정하면 바뀌지 않는 것입니다.'},
+ {t:'식별자',q:'다음 중 외부식별자에 해당하는 것은?',o:['게시글 엔티티의 게시글번호','댓글 엔티티의 게시글번호','학생 엔티티의 학번','상품 엔티티의 상품명'],a:1,e:'외부식별자는 부모 엔티티의 식별자를 물려받은 것입니다. 댓글은 게시글의 식별자를 받아오므로 댓글의 게시글번호가 외부식별자입니다. 게시글의 게시글번호는 그 엔티티 안에서 정의한 내부식별자입니다.'},
+ {t:'식별자',q:'auto_increment로 시스템이 새로 만든 ID는 어떤 식별자인가?',o:['원조식별자(본질식별자)','대리식별자(인조식별자)','보조식별자','복합식별자'],a:1,e:'시스템이 인공적으로 만든 식별자는 대리식별자입니다. 주민등록번호나 사업자등록번호처럼 현실에 이미 있는 값은 원조식별자입니다.'},
+ {t:'적용',q:'이탈방지턱 DB에서 한 처방(prescriptions)에 여러 플레이 세션(sessions)이 쌓인다. sessions 테이블의 rx_id는 무엇인가?',ctx:'<table><tr><th>prescriptions</th><th>sessions</th></tr><tr><td>#rx_id</td><td>#session_id</td></tr><tr><td>*patient_id</td><td>*rx_id</td></tr><tr><td>*start_date</td><td>*play_date</td></tr><tr><td>*days</td><td>*minutes</td></tr></table>',o:['sessions의 기본키(PK)','처방을 참조하는 외래키(FK)이며 처방(1):세션(N) 관계','처방과 세션의 N:M 관계를 해소하는 복합식별자','일반 속성이라 관계와 상관없다'],a:1,e:'세션은 어느 처방에 속한 플레이인지 rx_id로 가리킵니다. 한 처방에 세션이 여러 개 쌓이므로 처방(1):세션(N)이고, rx_id는 외래키입니다.'},
+ {t:'적용',q:'이탈방지턱에서 한 환자에게 여러 의사가 조치할 수 있고, 한 의사도 여러 환자에게 조치한다. 조치기록(clinician_actions) 엔티티의 역할은?',o:['환자 엔티티를 대신하는 상위 엔티티','의사(users)와 환자(patients)의 N:M 관계를 해소하는 교차 엔티티','의사와 환자를 1:1로 묶는 엔티티','조치 날짜만 저장하는 독립 엔티티'],a:1,e:'의사와 환자는 N:M 관계라서 조치기록이 교차 엔티티 역할을 합니다. 조치일, 조치 종류, AI 판단에 대한 의견 같은 관계 고유의 정보도 이 엔티티에 담습니다.'}
+];
+// 열 때마다 보기 순서를 섞어 정답 위치가 한쪽으로 몰리지 않게 함
+Q.forEach(function(q){var idx=q.o.map(function(_,j){return j;});
+  for(var j=idx.length-1;j>0;j--){var r=Math.floor(Math.random()*(j+1));var t=idx[j];idx[j]=idx[r];idx[r]=t;}
+  q.o=idx.map(function(j){return q.o[j];}); q.a=idx.indexOf(q.a);});
+var KEYS=['A','B','C','D'];
+var state={i:0,ans:Q.map(function(){return null;}),checked:Q.map(function(){return false;}),only:null};
+var $=function(id){return document.getElementById(id);};
+var order=function(){return state.only||Q.map(function(_,k){return k;});};
+
+function renderCells(){
+  var ord=order();
+  $('cells').innerHTML=Q.map(function(q,k){
+    var cls='cell'; if(state.checked[k]) cls+=state.ans[k]===q.a?' ok':' bad'; if(k===ord[state.i]&&!$('quiz').hidden) cls+=' cur';
+    var inSet=ord.indexOf(k)>=0;
+    return '<button type="button" class="'+cls+'" data-k="'+k+'"'+(inSet?'':' disabled')+' aria-label="'+(k+1)+'번 문제">'+(k+1)+'</button>';
+  }).join('');
+}
+function render(){
+  var ord=order(), k=ord[state.i], q=Q[k], done=state.checked[k];
+  var h='<div class="meta"><span>'+(state.only?'오답 다시 풀기 ':'')+(state.i+1)+' / '+ord.length+'</span><span>맞힌 문제 '+score()+'</span></div>';
+  h+='<article class="entity"><div class="ent-head"><b>Q'+String(k+1).padStart(2,'0')+'</b><span>'+q.t+'</span></div>';
+  h+='<div class="ent-q"><h2>'+q.q+'</h2>'+(q.ctx?'<div class="ctx">'+q.ctx+'</div>':'')+'</div>';
+  h+='<ul class="opts" role="radiogroup" aria-label="보기">'+q.o.map(function(t,j){
+    var cls='opt', mark='';
+    if(done){ if(j===q.a){cls+=' is-ok';mark='정답';} else if(j===state.ans[k]){cls+=' is-bad';mark='선택';} }
+    return '<li><button type="button" class="'+cls+'" role="radio" data-j="'+j+'" aria-checked="'+(state.ans[k]===j)+'"'+(done?' disabled':'')+'><span class="key">'+KEYS[j]+'</span><span>'+t+'</span><span class="mark">'+mark+'</span></button></li>';
+  }).join('')+'</ul></article>';
+  if(done){
+    var right=state.ans[k]===q.a;
+    h+='<div class="explain"><div class="verdict '+(right?'ok':'bad')+'">'+(right?'정답입니다.':'오답입니다. 정답은 '+KEYS[q.a]+'입니다.')+'</div><p>'+q.e+'</p></div>';
+  }
+  h+='<div class="actions">';
+  if(!done) h+='<button type="button" class="btn" id="check">정답 확인</button><span class="err" id="err" role="alert"></span>';
+  else h+='<button type="button" class="btn" id="next">'+(state.i<ord.length-1?'다음 문제':'결과 보기')+'</button>';
+  if(state.i>0) h+='<button type="button" class="btn ghost" id="prev">이전 문제</button>';
+  h+='</div>';
+  $('quiz').innerHTML=h; $('quiz').hidden=false; $('result').hidden=true; renderCells();
+}
+function score(){return Q.filter(function(q,k){return state.checked[k]&&state.ans[k]===q.a;}).length;}
+function showResult(){
+  var s=score(), topics={};
+  Q.forEach(function(q,k){topics[q.t]=topics[q.t]||{n:0,ok:0};topics[q.t].n++;if(state.checked[k]&&state.ans[k]===q.a)topics[q.t].ok++;});
+  var wrong=Q.map(function(q,k){return k;}).filter(function(k){return !state.checked[k]||state.ans[k]!==Q[k].a;});
+  var h='<h2>결과</h2><div class="score">'+s+'<small> / 20</small></div>';
+  h+='<div class="topics">'+Object.keys(topics).map(function(t){var x=topics[t];return '<div><span>'+t+'</span><span class="bar"><span style="width:'+(x.ok/x.n*100)+'%"></span></span><span class="n">'+x.ok+'/'+x.n+'</span></div>';}).join('')+'</div>';
+  if(wrong.length){
+    h+='<div class="wrong"><h3>틀리거나 안 푼 문제 '+wrong.length+'개</h3>'+wrong.map(function(k){var q=Q[k];return '<div class="w-item"><div class="q">Q'+(k+1)+'. '+q.q+'</div><div class="a">'+(state.checked[k]?'고른 답: '+KEYS[state.ans[k]]+' · ':'안 풂 · ')+'정답: <b>'+KEYS[q.a]+'. '+q.o[q.a]+'</b></div></div>';}).join('')+'</div>';
+  } else h+='<p style="margin-top:20px">20문제를 모두 맞혔습니다.</p>';
+  h+='<div class="actions">'+(wrong.length?'<button type="button" class="btn" id="retryWrong">틀린 문제만 다시 풀기</button>':'')+'<button type="button" class="btn ghost" id="restart">처음부터 다시</button></div>';
+  $('result').innerHTML=h; $('result').hidden=false; $('quiz').hidden=true; renderCells();
+  $('result').scrollIntoView({block:'start'});
+}
+document.addEventListener('click',function(ev){
+  var t=ev.target.closest('button'); if(!t) return;
+  var ord=order(), k=ord[state.i];
+  if(t.classList.contains('opt')&&!t.disabled){state.ans[k]=+t.dataset.j; render(); return;}
+  if(t.id==='check'){ if(state.ans[k]===null){$('err').textContent='보기를 먼저 고르세요.';return;} state.checked[k]=true; render(); return;}
+  if(t.id==='next'){ if(state.i<ord.length-1){state.i++;render();} else showResult(); return;}
+  if(t.id==='prev'){ state.i--; render(); return;}
+  if(t.classList.contains('cell')&&!t.disabled){ state.i=ord.indexOf(+t.dataset.k); render(); return;}
+  if(t.id==='restart'){ state={i:0,ans:Q.map(function(){return null;}),checked:Q.map(function(){return false;}),only:null}; render(); window.scrollTo(0,0); return;}
+  if(t.id==='retryWrong'){ var w=Q.map(function(_,j){return j;}).filter(function(j){return !state.checked[j]||state.ans[j]!==Q[j].a;});
+    w.forEach(function(j){state.ans[j]=null;state.checked[j]=false;}); state.only=w; state.i=0; render(); window.scrollTo(0,0); return;}
+});
+document.addEventListener('keydown',function(ev){
+  if($('quiz').hidden) return;
+  var map={a:0,b:1,c:2,d:3,'1':0,'2':1,'3':2,'4':3}, j=map[String(ev.key).toLowerCase()];
+  var k=order()[state.i];
+  if(j!==undefined&&!state.checked[k]&&!(ev.target.tagName==='INPUT')){state.ans[k]=j;render();}
+  else if(ev.key==='Enter'){var b=$('check')||$('next'); if(b){ev.preventDefault();b.click();}}
+});
+render();
+})();
+</script>
+</body>
+</html>
